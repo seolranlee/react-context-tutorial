@@ -1,19 +1,30 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 const CounterContext = createContext();
 
 // Context 에서 유동적인 값을 관리하는 경우엔 Provider를 새로 만들어주는 것이 좋다.
 function CounterProvider({ children }) {
-  // 하나의 상태만 있는 경우라면, useState를 사용하여 만들어진 값과 함수가 들어있는 배열을 통째로 value로 넣는다.
-  const counterState = useState(1);
+  // 데이터를 어떻게 업데이트할 지에 대한 로직을 컴포넌트가 아닌 Provider단에서 구현
+  const [counter, setCounter] = useState(1);
+  const actions = useMemo(
+    () => ({
+      increase() {
+        setCounter((prev) => prev + 1);
+      },
+      decrease() {
+        setCounter((prev) => prev - 1);
+      },
+    }),
+    []
+  );
+
+  const value = useMemo(() => [counter, actions], [counter, actions]);
   return (
-    <CounterContext.Provider value={counterState}>
-      {children}
-    </CounterContext.Provider>
+    <CounterContext.Provider value={value}>{children}</CounterContext.Provider>
   );
 }
 
 // 커스텀 Hook
-function useCounterState() {
+function useCounter() {
   const value = useContext(CounterContext);
   if (value === undefined) {
     throw new Error("useCounterState should be used within CounterProvider");
@@ -33,18 +44,16 @@ function App() {
 }
 
 function Value() {
-  const [counter] = useCounterState();
+  const [counter] = useCounter();
   return <h1>{counter}</h1>;
 }
 
 function Buttons() {
-  const [, setCounter] = useCounterState();
-  const increase = () => setCounter((prev) => prev + 1);
-  const decrease = () => setCounter((prev) => prev - 1);
+  const [, actions] = useCounter();
   return (
     <div>
-      <button onClick={increase}>+</button>
-      <button onClick={decrease}>-</button>
+      <button onClick={actions.increase}>+</button>
+      <button onClick={actions.decrease}>-</button>
     </div>
   );
 }
