@@ -1,72 +1,88 @@
 import { createContext, useContext, useMemo, useState } from "react";
 
-const CounterValueContext = createContext();
-const CounterActionsContext = createContext();
+const ModalValueContext = createContext();
+const ModalActionsContext = createContext();
 
-function CounterProvider({ children }) {
-  const [counter, setCounter] = useState(1);
+function ModalProvider({ children }) {
+  const [modal, setModal] = useState({
+    visible: false,
+    message: "",
+  });
+
   const actions = useMemo(
     () => ({
-      increase() {
-        setCounter((prev) => prev + 1);
+      open(message) {
+        setModal({
+          message,
+          visible: true,
+        });
       },
-      decrease() {
-        setCounter((prev) => prev - 1);
+      close() {
+        setModal((prev) => ({
+          ...prev,
+          visible: false,
+        }));
       },
     }),
     []
   );
 
   return (
-    <CounterActionsContext.Provider value={actions}>
-      <CounterValueContext.Provider value={counter}>
+    <ModalActionsContext.Provider value={actions}>
+      <ModalValueContext.Provider value={modal}>
         {children}
-      </CounterValueContext.Provider>
-    </CounterActionsContext.Provider>
+      </ModalValueContext.Provider>
+    </ModalActionsContext.Provider>
   );
 }
 
-function useCounterValue() {
-  const value = useContext(CounterValueContext);
+function useModalValue() {
+  const value = useContext(ModalValueContext);
   if (value === undefined) {
-    throw new Error("useCounterValue should be used within CounterProvider");
+    throw new Error("useModalValue should be used witin ModalProvider");
   }
   return value;
 }
 
-function useCounterActions() {
-  const value = useContext(CounterActionsContext);
+function useModalActions() {
+  const value = useContext(ModalActionsContext);
   if (value === undefined) {
-    throw new Error("useCounterActions should be used within CounterProvider");
+    throw new Error("useModalActions should be used witin ModalProvider");
   }
   return value;
-}
-
-function App() {
-  return (
-    <CounterProvider>
-      <div>
-        <Value />
-        <Buttons />
-      </div>
-    </CounterProvider>
-  );
 }
 
 function Value() {
-  console.log("Value");
-  const counter = useCounterValue();
-  return <h1>{counter}</h1>;
+  const { visible, message } = useModalValue();
+  return (
+    visible && (
+      <>
+        <h1>Hello modal</h1>
+        <p>{message}</p>
+      </>
+    )
+  );
 }
 
 function Buttons() {
   console.log("Buttons");
-  const actions = useCounterActions();
+  const { open, close } = useModalActions();
   return (
     <div>
-      <button onClick={actions.increase}>+</button>
-      <button onClick={actions.decrease}>-</button>
+      <button onClick={() => open("modal description")}>open</button>
+      <button onClick={close}>close</button>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ModalProvider>
+      <div>
+        <Value />
+        <Buttons />
+      </div>
+    </ModalProvider>
   );
 }
 
