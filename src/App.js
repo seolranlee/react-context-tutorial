@@ -53,6 +53,7 @@ function useModalActions() {
 }
 
 function Value() {
+  console.log("Value");
   const { visible, message } = useModalValue();
   return (
     visible && (
