@@ -1,6 +1,6 @@
 const { useState } = require("react");
 
-function Item({ active, children, onClick }) {
+function Item({ id, activeId, onSelect, children }) {
   const activeStyle = {
     backgroundColor: "black",
     color: "white",
@@ -9,6 +9,8 @@ function Item({ active, children, onClick }) {
     cursor: "pointer",
     padding: "1rem",
   };
+  const active = activeId === id;
+  const onClick = () => onSelect(id);
   return (
     <div
       style={active ? { ...style, ...activeStyle } : style}
@@ -23,13 +25,13 @@ function App() {
   const [activeId, setActiveId] = useState(1);
   return (
     <div>
-      <Item active={activeId === 1} onClick={() => setActiveId(1)}>
+      <Item id={1} activeId={activeId} onSelect={setActiveId}>
         Hello
       </Item>
-      <Item active={activeId === 2} onClick={() => setActiveId(2)}>
+      <Item id={2} activeId={activeId} onSelect={setActiveId}>
         World
       </Item>
-      <Item active={activeId === 3} onClick={() => setActiveId(3)}>
+      <Item id={3} activeId={activeId} onSelect={setActiveId}>
         React
       </Item>
     </div>
