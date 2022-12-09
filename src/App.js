@@ -1,89 +1,122 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useRef, useState } from "react";
 
-const ModalValueContext = createContext();
-const ModalActionsContext = createContext();
+const TodosValueContext = createContext();
+const TodosActionsContext = createContext();
 
-function ModalProvider({ children }) {
-  const [modal, setModal] = useState({
-    visible: false,
-    message: "",
-  });
+function TodosProvider({ children }) {
+  const idRef = useRef(3);
+  const [todos, setTodos] = useState([
+    {
+      id: 1,
+      text: "밥먹기",
+      done: true,
+    },
+    {
+      id: 2,
+      text: "잠자기",
+      done: false,
+    },
+  ]);
 
   const actions = useMemo(
     () => ({
-      open(message) {
-        setModal({
-          message,
-          visible: true,
-        });
-      },
-      close() {
-        setModal((prev) => ({
+      add(text) {
+        const id = idRef.current;
+        idRef.current += 1;
+        setTodos((prev) => [
           ...prev,
-          visible: false,
-        }));
+          {
+            id,
+            text,
+            done: false,
+          },
+        ]);
+      },
+      toggle(id) {
+        setTodos((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  done: !item.done,
+                }
+              : item
+          )
+        );
+      },
+      remove(id) {
+        setTodos((prev) => prev.filter((item) => item.id !== id));
       },
     }),
     []
   );
 
   return (
-    <ModalActionsContext.Provider value={actions}>
-      <ModalValueContext.Provider value={modal}>
+    <TodosActionsContext.Provider value={actions}>
+      <TodosValueContext.Provider value={todos}>
         {children}
-      </ModalValueContext.Provider>
-    </ModalActionsContext.Provider>
+      </TodosValueContext.Provider>
+    </TodosActionsContext.Provider>
   );
 }
 
-function useModalValue() {
-  const value = useContext(ModalValueContext);
+function useTodosValue() {
+  const value = useContext(TodosValueContext);
   if (value === undefined) {
-    throw new Error("useModalValue should be used witin ModalProvider");
+    throw new Error("useTodosValue should be used witin TodosProvider");
   }
   return value;
 }
 
-function useModalActions() {
-  const value = useContext(ModalActionsContext);
+function useTodosActions() {
+  const value = useContext(TodosActionsContext);
   if (value === undefined) {
-    throw new Error("useModalActions should be used witin ModalProvider");
+    throw new Error("useTodosActions should be used witin TodosProvider");
   }
   return value;
 }
 
 function Value() {
   console.log("Value");
-  const { visible, message } = useModalValue();
+  const todos = useTodosValue();
   return (
-    visible && (
-      <>
-        <h1>Hello modal</h1>
-        <p>{message}</p>
-      </>
+    todos.length && (
+      <ul>
+        {todos.map((todo) => (
+          <li key={todo.id}>
+            {todo.id}. {todo.text} {todo.done ? "완료" : "미완료"}{" "}
+            <Button id={todo.id} />
+          </li>
+        ))}
+      </ul>
     )
   );
 }
 
-function Buttons() {
+function Button({ id }) {
   console.log("Buttons");
-  const { open, close } = useModalActions();
+  const { toggle, remove } = useTodosActions();
   return (
     <div>
-      <button onClick={() => open("modal description")}>open</button>
-      <button onClick={close}>close</button>
+      <button onClick={() => toggle(id)}>toggle</button>
+      <button onClick={() => remove(id)}>remove</button>
     </div>
   );
 }
 
+function Add() {
+  const { add } = useTodosActions();
+  return <button onClick={() => add("추가된 todo")}>add</button>;
+}
+
 function App() {
   return (
-    <ModalProvider>
+    <TodosProvider>
       <div>
         <Value />
-        <Buttons />
+        <Add />
       </div>
-    </ModalProvider>
+    </TodosProvider>
   );
 }
 
