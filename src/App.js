@@ -1,9 +1,9 @@
 import { createContext, useContext, useMemo, useState } from "react";
-const CounterContext = createContext();
 
-// Context 에서 유동적인 값을 관리하는 경우엔 Provider를 새로 만들어주는 것이 좋다.
+const CounterValueContext = createContext();
+const CounterActionsContext = createContext();
+
 function CounterProvider({ children }) {
-  // 데이터를 어떻게 업데이트할 지에 대한 로직을 컴포넌트가 아닌 Provider단에서 구현
   const [counter, setCounter] = useState(1);
   const actions = useMemo(
     () => ({
@@ -17,17 +17,27 @@ function CounterProvider({ children }) {
     []
   );
 
-  const value = useMemo(() => [counter, actions], [counter, actions]);
   return (
-    <CounterContext.Provider value={value}>{children}</CounterContext.Provider>
+    <CounterActionsContext.Provider value={actions}>
+      <CounterValueContext.Provider value={counter}>
+        {children}
+      </CounterValueContext.Provider>
+    </CounterActionsContext.Provider>
   );
 }
 
-// 커스텀 Hook
-function useCounter() {
-  const value = useContext(CounterContext);
+function useCounterValue() {
+  const value = useContext(CounterValueContext);
   if (value === undefined) {
-    throw new Error("useCounterState should be used within CounterProvider");
+    throw new Error("useCounterValue should be used within CounterProvider");
+  }
+  return value;
+}
+
+function useCounterActions() {
+  const value = useContext(CounterActionsContext);
+  if (value === undefined) {
+    throw new Error("useCounterActions should be used within CounterProvider");
   }
   return value;
 }
@@ -44,12 +54,14 @@ function App() {
 }
 
 function Value() {
-  const [counter] = useCounter();
+  console.log("Value");
+  const counter = useCounterValue();
   return <h1>{counter}</h1>;
 }
 
 function Buttons() {
-  const [, actions] = useCounter();
+  console.log("Buttons");
+  const actions = useCounterActions();
   return (
     <div>
       <button onClick={actions.increase}>+</button>
