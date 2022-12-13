@@ -23,17 +23,23 @@ function Item({ id, activeId, onSelect, children }) {
 
 function App() {
   const [activeId, setActiveId] = useState(1);
+  const items = [
+    { id: 1, text: "Hello" },
+    { id: 2, text: "World" },
+    { id: 3, text: "React" },
+  ];
   return (
     <div>
-      <Item id={1} activeId={activeId} onSelect={setActiveId}>
-        Hello
-      </Item>
-      <Item id={2} activeId={activeId} onSelect={setActiveId}>
-        World
-      </Item>
-      <Item id={3} activeId={activeId} onSelect={setActiveId}>
-        React
-      </Item>
+      {items.map((item) => (
+        <Item
+          key={item.id}
+          id={item.id}
+          activeId={activeId}
+          onSelect={setActiveId}
+        >
+          {item.text}
+        </Item>
+      ))}
     </div>
   );
 }
