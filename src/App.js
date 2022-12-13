@@ -1,6 +1,29 @@
-const { useState } = require("react");
+const { useState, createContext, useMemo, useContext } = require("react");
 
-function Item({ id, activeId, onSelect, children }) {
+const ItemGroupContext = createContext();
+
+function ItemGroup({ children, activeId, onSelect }) {
+  const value = useMemo(
+    () => ({
+      activeId,
+      onSelect,
+    }),
+    [activeId, onSelect]
+  );
+  return (
+    <ItemGroupContext.Provider value={value}>
+      {children}
+    </ItemGroupContext.Provider>
+  );
+}
+function useItemGroup() {
+  const value = useContext(ItemGroupContext);
+  if (value === undefined) {
+    throw new Error("Item component should be used within ItemGroup");
+  }
+  return value;
+}
+function Item({ children, id }) {
   const activeStyle = {
     backgroundColor: "black",
     color: "white",
@@ -9,6 +32,7 @@ function Item({ id, activeId, onSelect, children }) {
     cursor: "pointer",
     padding: "1rem",
   };
+  const { activeId, onSelect } = useItemGroup();
   const active = activeId === id;
   const onClick = () => onSelect(id);
   return (
@@ -23,23 +47,20 @@ function Item({ id, activeId, onSelect, children }) {
 
 function App() {
   const [activeId, setActiveId] = useState(1);
-  const items = [
-    { id: 1, text: "Hello" },
-    { id: 2, text: "World" },
-    { id: 3, text: "React" },
-  ];
+  const [anotherActiveId, setAnotherActiveId] = useState(102);
+
   return (
     <div>
-      {items.map((item) => (
-        <Item
-          key={item.id}
-          id={item.id}
-          activeId={activeId}
-          onSelect={setActiveId}
-        >
-          {item.text}
-        </Item>
-      ))}
+      <ItemGroup activeId={activeId} onSelect={setActiveId}>
+        <Item id={1}>Hello</Item>
+        <Item id={2}>World</Item>
+        <Item id={3}>React</Item>
+      </ItemGroup>
+      <ItemGroup activeId={anotherActiveId} onSelect={setAnotherActiveId}>
+        <Item id={101}>Bye</Item>
+        <Item id={102}>World</Item>
+        <Item id={103}>Context</Item>
+      </ItemGroup>
     </div>
   );
 }
